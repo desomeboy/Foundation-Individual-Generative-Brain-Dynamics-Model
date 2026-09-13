@@ -22,6 +22,15 @@ forecasts to derive CBM features for neuromodulation-response prediction.
 
 ![iVB-based workflow and CBM calculation](Figure/CBM.png)
 
+## Installation
+
+The full study workflow uses Python 3.9:
+
+```bash
+conda env create -f environment.yml
+conda activate vtb
+```
+
 ## Data and input specification
 
 The source imaging data are not mirrored in this repository. Obtain each public
@@ -125,7 +134,7 @@ The following example runs without clinical data:
 ```bash
 git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
 cd Foundation-Individual-Generative-Virtual-Brain
-conda env create -f environment.yml
+conda env create -f environment-demo.yml
 conda activate vtb-demo
 "$CONDA_PREFIX/bin/python" scripts/run_demo.py --output-dir demo_outputs
 ```

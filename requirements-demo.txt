@@ -1,11 +1,7 @@
-# Pinned Python 3.9 packages for the study workflow.
+# Pinned Python 3.9 packages for the runnable demo.
 --extra-index-url https://download.pytorch.org/whl/cpu
-matplotlib==3.9.4
-nibabel==5.3.2
 numpy==1.26.4
 pandas==2.3.1
 scikit-learn==1.6.1
-scipy==1.13.1
-seaborn==0.13.2
 torch==2.1.2+cpu
 tqdm==4.67.1
