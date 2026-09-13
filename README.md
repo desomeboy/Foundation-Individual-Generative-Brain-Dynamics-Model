@@ -1,102 +1,157 @@
-# Predicting Neuromodulation Outcome for Parkinson’s Disease with Generative Virtual Brain Model
+# Predicting Neuromodulation Outcome for Parkinson's Disease with a Generative Brain Dynamics Model
 
-A preliminary code implementation for the paper "Predicting Neuromodulation Outcome for Parkinson’s Disease with Generative Virtual Brain Model".
+This repository provides the code implementation and data-processing workflow
+for the Generative Brain Dynamics Model (GBDM) described in the manuscript. A
+Foundation Brain Dynamics Model (FBDM) forecasts the next 166-region BOLD state
+from seven preceding frames and clinical context; participant-specific
+fine-tuning yields an Individualized Brain Dynamics Model (iBDM). The generated
+BOLD forecasts are used to derive Counterfactual Brain Mismatch (CBM) features
+for downstream neuromodulation-response prediction.
 
-## Overview
+Study imaging data are not bundled with the repository. A self-contained
+synthetic smoke test is provided so that the model interface can be run without
+access to any study data.
 
-This repository contains the source code, pre-trained models, and data processing pipelines described in our work. Our proposed framework leverages generative modeling to bridge the gap between large-scale neuroimaging data and limited clinical samples, enabling precise prediction of neuromodulation outcomes.
+## Quick start: data-independent smoke test
 
-#### 1. Framework Overview
-Overview of the proposed framework: a generative virtual brain paradigm transfers dynamical priors from large-scale data to small clinical cohorts for individualized neuromodulation response prediction.
+The following commands create the tested Python 3.9 environment and run the
+synthetic example:
+
+```bash
+git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
+cd Foundation-Individual-Generative-Virtual-Brain
+conda env create -f environment.yml
+conda activate gbdm
+python scripts/run_demo.py --output-dir demo_outputs
+```
+
+Alternatively, install the same pinned Python packages in an existing Python
+3.9 environment:
+
+```bash
+python -m pip install -r requirements.txt
+python scripts/run_demo.py --output-dir demo_outputs
+```
+
+The pinned default uses the portable CPU build of PyTorch. For full-scale
+training on a GPU, install the PyTorch build matching the local CUDA driver in
+place of the CPU wheel; no change to the study scripts is required.
+
+The command generates artificial 166-region BOLD signals, applies per-region
+temporal z-scoring, constructs seven-frame forecasting windows, runs a short
+context-conditioned FBDM optimization and participant-specific iBDM
+fine-tuning, and saves predictions and basic fitting metrics. Expected output:
+
+```text
+demo_outputs/
+├── fbdm_predictions.npy
+├── ibdm_predictions.npy
+├── metrics.json
+├── synthetic_participant_bold.csv
+├── synthetic_reference_bold.csv
+└── targets.npy
+```
+
+The synthetic data contain no participant information. The deliberately small
+model and short optimization are solely a software smoke test; their metrics
+have no scientific or clinical interpretation. See
+[`examples/README.md`](examples/README.md) for the input specification.
+
+## Framework overview
 
 ![Overview of the proposed framework](Figure/framework.png)
 
-#### 2. Model Architecture
-Architecture of the generative virtual brain model.
-![Architecture of the generative virtual brain model](Figure/model_structure.png)
+![Architecture of the generative brain dynamics model](Figure/model_structure.png)
 
-#### 3. Workflow & Counterfactual Analysis
-Schematic illustration of the iVB-based workflow for predicting neuromodulation response and diagram depicting the calculation of the Counterfactual Brain Mismatch.
+![Workflow and CBM calculation](Figure/CBM.png)
 
-![iVB-based workflow and CBM calculation](Figure/CBM.png)
+The repository retains several legacy `VTB` class and file names so that the
+original scripts continue to run. `GBDMTransformer` is provided as the current
+manuscript-aligned alias of the same implementation.
 
-## Installation
+## Study data and access
 
-```bash
-git clone git@github.com:desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
-cd Foundation-Individual-Generative-Virtual-Brain
+The source neuroimaging files are not mirrored in this code repository. Users
+should obtain them directly from the originating repositories and follow the
+applicable access and data-use conditions:
 
-conda create -n vtb python=3.9 -y
-conda activate vtb
-pip install -r requirements.txt
-```
+| Dataset | Access |
+|---|---|
+| ADNI | [ADNI data access](https://adni.loni.usc.edu/data-samples/adni-data/) |
+| PPMI | [PPMI data access](https://www.ppmi-info.org/access-data-specimens/download-data) |
+| ABIDE | [NITRC/INDI ABIDE](http://fcon_1000.projects.nitrc.org/indi/abide/) |
+| HCP Young Adult | [HCP 1200 Subjects release](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) |
+| AAL3 atlas | [AAL3](https://www.gin.cnrs.fr/en/tools/aal/) |
 
-If you plan to run the scripts in [`Data_process/`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/tree/main/Data_process), you will also need several external command-line tools:
+Clinical TI and DBS data are governed by institutional privacy and ethics
+requirements and are not publicly distributed through GitHub. As described in
+the manuscript, de-identified preprocessed derivatives and associated clinical
+assessments may be requested from the corresponding author, subject to ethical
+approval and a data-sharing agreement.
 
-- [`dcm2niix`](https://github.com/rordenlab/dcm2niix) for DICOM-to-NIfTI conversion
-- [`FSL`](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki) utilities such as `bet`, `fast`, `flirt`, `fnirt`, `slicetimer`, `mcflirt`, `fslmaths`, and `applywarp`
+## Full study workflow
 
-Please make sure these tools are installed and available in your `PATH` (and `FSLDIR` is correctly configured for FSL) before running the preprocessing pipeline.
+The original pretraining, individualized-model, and downstream prediction
+entry points are retained. They require locally obtained study data and paths
+configured for the user's environment.
 
-## Data
+### 1. Preprocessing
 
-Public datasets used in this work include ADNI, ABIDE, PPMI, HCP, and the AAL3 atlas.
-### Public Data Sources
-| Dataset | Content | Access |
-|---------|---------|--------|
-| **ADNI / ABIDE / PPMI** | Multimodal neuroimaging & clinical data | [IDA/LONI](https://ida.loni.usc.edu) |
-| **HCP Young Adult** | 1,200 healthy subjects resting-state fMRI | [HCP Portal](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) |
-| **AAL3 Atlas** | 166-ROI brain parcellation | [AAL3](https://www.gin.cnrs.fr/en/tools/aal/) |
+Python preprocessing scripts and the AAL3 resources are under `Data_process/`.
+The volume-based preprocessing workflow also calls external software that must
+be installed separately:
 
-> Access to ADNI/ABIDE/PPMI requires registration via IDA.
+- [`dcm2niix`](https://github.com/rordenlab/dcm2niix) for DICOM-to-NIfTI conversion;
+- [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), including `bet`, `fast`,
+  `flirt`, `fnirt`, `slicetimer`, `mcflirt`, `fslmaths`, and `applywarp`.
 
-### Preprocessing & Labels
-- **Preprocessing code**: All pipelines (motion correction, normalization, AAL3 parcellation) are implemented in [`Data_process/`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/tree/main/Data_process).
-- **Subject labels**: Subject IDs and clinical outcomes are stored in [`Data_process/Data_label.csv`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/Data_process/Data_label.csv).
+Processed input CSV files contain consecutive BOLD frames in rows and 166 AAL3
+regions in columns. Configure the public-cohort paths in `vtb/config.py` or pass
+the corresponding command-line arguments. `Data_process/Data_label.csv`
+contains the public-cohort disease labels used by the training loader.
 
-Because of data share restrictions, dataset locations are not hard-coded for public release. Please update local paths in [`vtb/config.py`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/vtb/config.py) and related scripts according to your own environment. The data processing part in [`Data_process/`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/tree/main/Data_process) is provided for reference.
-
-
-## Running Pipeline
-
-The recommended workflow is:
-
-1. Pre-train the foundation virtual brain (FVB) with [`scripts/train_FVB.py`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/scripts/train_FVB.py).
-2. Build subject-specific VTBs from clinical data with [`batch_iVB_final.sh`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/batch_iVB_final.sh), which batch-runs [`scripts/train_iVB.py`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/scripts/train_iVB.py).
-3. Run downstream prognosis experiments in [`predict_exp/`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/tree/main/predict_exp).
-
-### 1. Pre-train FVB
-
-Train the base model on large-scale datasets:
+### 2. FBDM pretraining
 
 ```bash
 python scripts/train_FVB.py --train
 ```
 
-This step produces the pre-trained foundation model checkpoint used in later individualized analysis.
+This trains the foundation forecasting model after the dataset locations have
+been configured.
 
-### 2. Build VTB for Clinical Subjects
+### 3. Participant-specific iBDMs
 
-After preparing clinical CSV files and setting the input/output paths in [`batch_iVB_final.sh`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/blob/main/batch_iVB_final.sh), run:
+Set the checkpoint, input, and output paths in `batch_iVB_final.sh`, then run:
 
 ```bash
 bash batch_iVB_final.sh
 ```
 
-This step fine-tunes the pre-trained model for each clinical subject and saves the corresponding VTB outputs, including subject-level anomaly/distortion features.
+The batch script calls `scripts/train_iVB.py` to fine-tune the FBDM for each
+clinical input time series and save participant-level outputs.
 
-### 3. Response prediction
+### 4. Response prediction
 
-Use the scripts under [`predict_exp/`](https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain/tree/main/predict_exp) for downstream prediction tasks. For example:
+The TI and DBS downstream classifiers/regressors are under `predict_exp/`. For
+example:
 
 ```bash
 python predict_exp/DBS/diff/PP_diff.py
-```
-
-or
-
-```bash
 python predict_exp/DBS/diff_regression/PP_diff_regression.py
 ```
 
-Please update the input VTB directory and clinical table path inside each script before running.
+These scripts require the generated participant-level features and the
+corresponding controlled clinical tables; update their input paths before use.
+
+## Reproducibility scope
+
+The synthetic demo verifies installation, the 166-region/seven-frame input
+contract, the context-conditioned forecasting pass, participant-specific
+fine-tuning, and output serialization. Reproducing manuscript values requires
+the study datasets acquired through the routes above and the study-specific
+analysis configuration. The synthetic example was not used to derive any
+reported result.
+
+## License
+
+The code is released under the Apache License 2.0. See [`LICENSE`](LICENSE).
