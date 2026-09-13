@@ -22,43 +22,6 @@ forecasts to derive CBM features for neuromodulation-response prediction.
 
 ![iVB-based workflow and CBM calculation](Figure/CBM.png)
 
-## Installation
-
-The tested environment uses Python 3.9 and a portable CPU build of PyTorch:
-
-```bash
-git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
-cd Foundation-Individual-Generative-Virtual-Brain
-conda env create -f environment.yml
-conda activate vtb
-```
-
-If an existing FSL installation places its own Python ahead of Conda in
-`PATH`, restore the activated environment before running the commands below:
-
-```bash
-export PATH="$CONDA_PREFIX/bin:$PATH"
-hash -r
-python --version  # expected: Python 3.9.x
-python -m pip check
-```
-
-Alternatively, install the same pinned packages in an existing Python 3.9
-environment:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-For full-scale training on a GPU, replace the pinned CPU PyTorch wheel with the
-build matching the local CUDA driver. The Python preprocessing scripts are
-included in this environment. The volume-based preprocessing workflow also
-calls external software that must be installed separately:
-
-- [`dcm2niix`](https://github.com/rordenlab/dcm2niix) for DICOM-to-NIfTI conversion;
-- [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), including `bet`, `fast`,
-  `flirt`, `fnirt`, `slicetimer`, `mcflirt`, `fslmaths`, and `applywarp`.
-
 ## Data and input specification
 
 The source imaging data are not mirrored in this repository. Obtain each public
@@ -72,12 +35,6 @@ conditions:
 | ABIDE | [NITRC/INDI ABIDE](http://fcon_1000.projects.nitrc.org/indi/abide/) |
 | HCP Young Adult | [HCP 1200 Subjects release](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) |
 | AAL3 atlas | [AAL3](https://www.gin.cnrs.fr/en/tools/aal/) |
-
-Clinical TI and DBS data are governed by institutional privacy and ethics
-requirements and are not publicly distributed through GitHub. As described in
-the manuscript, de-identified preprocessed derivatives and associated clinical
-assessments may be requested from the corresponding author, subject to ethical
-approval and a data-sharing agreement.
 
 The model expects one preprocessed resting-state fMRI time series per CSV file:
 
@@ -98,6 +55,10 @@ Run the applicable scripts under `Data_process/`, then place the resulting AAL3
 CSV files in local dataset directories. Dataset paths can be configured in
 `vtb/config.py` or supplied directly to the FVB command with repeatable
 `--data_dir` arguments.
+
+Volume-based preprocessing requires
+[`dcm2niix`](https://github.com/rordenlab/dcm2niix) and
+[FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki).
 
 ### 2. Pre-train FVB
 
@@ -157,12 +118,16 @@ python predict_exp/DBS/diff_regression/PP_diff_regression.py
 These scripts require the generated participant-level CBM features and the
 corresponding controlled clinical tables. Update their input paths before use.
 
-## Quick start: data-independent smoke test
+## Runnable demo
 
-After installing the environment, run:
+The following example runs without clinical data:
 
 ```bash
-python scripts/run_demo.py --output-dir demo_outputs
+git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
+cd Foundation-Individual-Generative-Virtual-Brain
+conda env create -f environment.yml
+conda activate vtb-demo
+"$CONDA_PREFIX/bin/python" scripts/run_demo.py --output-dir demo_outputs
 ```
 
 The command creates artificial 166-region BOLD signals, applies per-region

@@ -4,5 +4,16 @@ from .models import *
 from .data import multi2one, load_patient_data, cache_dataset, prepare_dataset
 from .train import train_NN, save_model, load_model, fine_tune_for_patient
 from .metrics import corrcoef, model_FC, model_EC, model_Jacobian, flat_without_diagonal
-from .viz import plot_training_curves
-from .analysis import analyze_single_patient
+
+
+def __getattr__(name):
+    """Load plotting and analysis helpers only when they are requested."""
+    if name == "plot_training_curves":
+        from .viz import plot_training_curves
+
+        return plot_training_curves
+    if name == "analyze_single_patient":
+        from .analysis import analyze_single_patient
+
+        return analyze_single_patient
+    raise AttributeError("module {!r} has no attribute {!r}".format(__name__, name))
