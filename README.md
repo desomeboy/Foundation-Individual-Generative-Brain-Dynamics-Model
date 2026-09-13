@@ -87,7 +87,8 @@ The model expects one preprocessed resting-state fMRI time series per CSV file:
 - all values are finite numeric values.
 
 Python preprocessing scripts and AAL3 resources are under `Data_process/`.
-`Data_process/Data_label.csv` illustrates the public-cohort label-table schema.
+`Data_process/Data_label.csv` contains the public-cohort sample IDs, dataset
+codes, and model labels used by the training loader.
 
 ## Running the full study workflow
 
@@ -177,11 +178,6 @@ demo_outputs/
 ├── synthetic_reference_bold.csv
 └── targets.npy
 ```
-
-The synthetic data contain no participant information. The small model and
-short optimization are solely a software smoke test; their metrics have no
-scientific or clinical interpretation. See [`examples/README.md`](examples/README.md)
-for the detailed input specification.
 
 ## License
 
