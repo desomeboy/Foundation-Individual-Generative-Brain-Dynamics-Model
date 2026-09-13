@@ -3,6 +3,8 @@ Batch-process T1 and rs-fMRI data under an ABIDE-style directory structure
 and extract regional BOLD time series to CSV files.
 """
 
+from __future__ import annotations
+
 import argparse
 import os
 import shutil

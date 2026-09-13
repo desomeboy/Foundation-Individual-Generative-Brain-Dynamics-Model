@@ -1,79 +1,69 @@
-# Predicting Neuromodulation Outcome for Parkinson's Disease with a Generative Brain Dynamics Model
+# Predicting Neuromodulation Outcome for Parkinson's Disease with Generative Virtual Brain Model
 
 This repository provides the code implementation and data-processing workflow
-for the Generative Brain Dynamics Model (GBDM) described in the manuscript. A
-Foundation Brain Dynamics Model (FBDM) forecasts the next 166-region BOLD state
-from seven preceding frames and clinical context; participant-specific
-fine-tuning yields an Individualized Brain Dynamics Model (iBDM). The generated
-BOLD forecasts are used to derive Counterfactual Brain Mismatch (CBM) features
-for downstream neuromodulation-response prediction.
+for the Foundation Virtual Brain (FVB), individualized Virtual Brain (iVB), and
+Counterfactual Brain Mismatch (CBM) analyses described in the manuscript.
 
-Study imaging data are not bundled with the repository. A self-contained
-synthetic smoke test is provided so that the model interface can be run without
-access to any study data.
+## Overview
 
-## Quick start: data-independent smoke test
+The framework transfers dynamical priors learned from large-scale resting-state
+fMRI datasets to individual clinical time series and uses the generated BOLD
+forecasts to derive CBM features for neuromodulation-response prediction.
 
-The following commands create the tested Python 3.9 environment and run the
-synthetic example:
+### Framework overview
+
+![Overview of the proposed framework](Figure/framework.png)
+
+### Model architecture
+
+![Architecture of the generative virtual brain model](Figure/model_structure.png)
+
+### iVB workflow and counterfactual analysis
+
+![iVB-based workflow and CBM calculation](Figure/CBM.png)
+
+## Installation
+
+The tested environment uses Python 3.9 and a portable CPU build of PyTorch:
 
 ```bash
 git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
 cd Foundation-Individual-Generative-Virtual-Brain
 conda env create -f environment.yml
-conda activate gbdm
-python scripts/run_demo.py --output-dir demo_outputs
+conda activate vtb
 ```
 
-Alternatively, install the same pinned Python packages in an existing Python
-3.9 environment:
+If an existing FSL installation places its own Python ahead of Conda in
+`PATH`, restore the activated environment before running the commands below:
+
+```bash
+export PATH="$CONDA_PREFIX/bin:$PATH"
+hash -r
+python --version  # expected: Python 3.9.x
+python -m pip check
+```
+
+Alternatively, install the same pinned packages in an existing Python 3.9
+environment:
 
 ```bash
 python -m pip install -r requirements.txt
-python scripts/run_demo.py --output-dir demo_outputs
 ```
 
-The pinned default uses the portable CPU build of PyTorch. For full-scale
-training on a GPU, install the PyTorch build matching the local CUDA driver in
-place of the CPU wheel; no change to the study scripts is required.
+For full-scale training on a GPU, replace the pinned CPU PyTorch wheel with the
+build matching the local CUDA driver. The Python preprocessing scripts are
+included in this environment. The volume-based preprocessing workflow also
+calls external software that must be installed separately:
 
-The command generates artificial 166-region BOLD signals, applies per-region
-temporal z-scoring, constructs seven-frame forecasting windows, runs a short
-context-conditioned FBDM optimization and participant-specific iBDM
-fine-tuning, and saves predictions and basic fitting metrics. Expected output:
+- [`dcm2niix`](https://github.com/rordenlab/dcm2niix) for DICOM-to-NIfTI conversion;
+- [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), including `bet`, `fast`,
+  `flirt`, `fnirt`, `slicetimer`, `mcflirt`, `fslmaths`, and `applywarp`.
 
-```text
-demo_outputs/
-├── fbdm_predictions.npy
-├── ibdm_predictions.npy
-├── metrics.json
-├── synthetic_participant_bold.csv
-├── synthetic_reference_bold.csv
-└── targets.npy
-```
+## Data and input specification
 
-The synthetic data contain no participant information. The deliberately small
-model and short optimization are solely a software smoke test; their metrics
-have no scientific or clinical interpretation. See
-[`examples/README.md`](examples/README.md) for the input specification.
-
-## Framework overview
-
-![Overview of the proposed framework](Figure/framework.png)
-
-![Architecture of the generative brain dynamics model](Figure/model_structure.png)
-
-![Workflow and CBM calculation](Figure/CBM.png)
-
-The repository retains several legacy `VTB` class and file names so that the
-original scripts continue to run. `GBDMTransformer` is provided as the current
-manuscript-aligned alias of the same implementation.
-
-## Study data and access
-
-The source neuroimaging files are not mirrored in this code repository. Users
-should obtain them directly from the originating repositories and follow the
-applicable access and data-use conditions:
+The source imaging data are not mirrored in this repository. Obtain each public
+dataset from its originating repository and follow its access and data-use
+conditions:
 
 | Dataset | Access |
 |---|---|
@@ -89,68 +79,117 @@ the manuscript, de-identified preprocessed derivatives and associated clinical
 assessments may be requested from the corresponding author, subject to ethical
 approval and a data-sharing agreement.
 
-## Full study workflow
+The model expects one preprocessed resting-state fMRI time series per CSV file:
 
-The original pretraining, individualized-model, and downstream prediction
-entry points are retained. They require locally obtained study data and paths
-configured for the user's environment.
+- rows are consecutive BOLD frames;
+- columns are 166 AAL3 regions in the project ordering;
+- the first row contains column names;
+- all values are finite numeric values.
+
+Python preprocessing scripts and AAL3 resources are under `Data_process/`.
+`Data_process/Data_label.csv` illustrates the public-cohort label-table schema.
+
+## Running the full study workflow
 
 ### 1. Preprocessing
 
-Python preprocessing scripts and the AAL3 resources are under `Data_process/`.
-The volume-based preprocessing workflow also calls external software that must
-be installed separately:
+Run the applicable scripts under `Data_process/`, then place the resulting AAL3
+CSV files in local dataset directories. Dataset paths can be configured in
+`vtb/config.py` or supplied directly to the FVB command with repeatable
+`--data_dir` arguments.
 
-- [`dcm2niix`](https://github.com/rordenlab/dcm2niix) for DICOM-to-NIfTI conversion;
-- [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki), including `bet`, `fast`,
-  `flirt`, `fnirt`, `slicetimer`, `mcflirt`, `fslmaths`, and `applywarp`.
+### 2. Pre-train FVB
 
-Processed input CSV files contain consecutive BOLD frames in rows and 166 AAL3
-regions in columns. Configure the public-cohort paths in `vtb/config.py` or pass
-the corresponding command-line arguments. `Data_process/Data_label.csv`
-contains the public-cohort disease labels used by the training loader.
-
-### 2. FBDM pretraining
+Using the dataset paths in `vtb/config.py`:
 
 ```bash
 python scripts/train_FVB.py --train
 ```
 
-This trains the foundation forecasting model after the dataset locations have
-been configured.
+Or supply one or more preprocessed-data directories without editing source
+code:
 
-### 3. Participant-specific iBDMs
+```bash
+python scripts/train_FVB.py --train \
+  --data_dir /path/to/HCP_AAL3_CSV \
+  --data_dir /path/to/PPMI_AAL3_CSV \
+  --label_path /path/to/Data_label.csv
+```
 
-Set the checkpoint, input, and output paths in `batch_iVB_final.sh`, then run:
+This step produces the FVB checkpoint used in individualized analysis. The
+model-architecture arguments used here must also be supplied when loading the
+checkpoint in the next step.
+
+### 3. Build iVBs for clinical participants
+
+Set `CSV_DIR`, `MODEL_PATH`, `HEALTHY_CSV_PATH`, `HEALTHY_MODEL_PATH`, and
+`OUTPUT_BASE` in `batch_iVB_final.sh`, then run:
 
 ```bash
 bash batch_iVB_final.sh
 ```
 
-The batch script calls `scripts/train_iVB.py` to fine-tune the FBDM for each
-clinical input time series and save participant-level outputs.
+The batch script calls `scripts/train_iVB.py` for each clinical CSV. The healthy
+reference CSV and FVB checkpoint are used to calculate the two CBM components
+during participant-specific fine-tuning. A single participant can also be run
+directly:
+
+```bash
+python scripts/train_iVB.py \
+  --patient_csv /path/to/participant.csv \
+  --model_path /path/to/fvb_checkpoint.pth \
+  --healthy_csv_path /path/to/healthy_reference.csv \
+  --healthy_model_path /path/to/healthy_fvb_checkpoint.pth \
+  --output_dir /path/to/ivb_output \
+  --fine_tune
+```
 
 ### 4. Response prediction
 
-The TI and DBS downstream classifiers/regressors are under `predict_exp/`. For
-example:
+The TI and DBS classifiers and regressors are under `predict_exp/`. For example:
 
 ```bash
 python predict_exp/DBS/diff/PP_diff.py
 python predict_exp/DBS/diff_regression/PP_diff_regression.py
 ```
 
-These scripts require the generated participant-level features and the
-corresponding controlled clinical tables; update their input paths before use.
+These scripts require the generated participant-level CBM features and the
+corresponding controlled clinical tables. Update their input paths before use.
+
+## Quick start: data-independent smoke test
+
+After installing the environment, run:
+
+```bash
+python scripts/run_demo.py --output-dir demo_outputs
+```
+
+The command creates artificial 166-region BOLD signals, applies per-region
+temporal z-scoring, constructs seven-frame forecasting windows, runs a short
+FVB optimization and participant-specific iVB fine-tuning, and saves:
+
+```text
+demo_outputs/
+├── fvb_predictions.npy
+├── ivb_predictions.npy
+├── metrics.json
+├── synthetic_participant_bold.csv
+├── synthetic_reference_bold.csv
+└── targets.npy
+```
+
+The synthetic data contain no participant information. The small model and
+short optimization are solely a software smoke test; their metrics have no
+scientific or clinical interpretation. See [`examples/README.md`](examples/README.md)
+for the detailed input specification.
 
 ## Reproducibility scope
 
 The synthetic demo verifies installation, the 166-region/seven-frame input
-contract, the context-conditioned forecasting pass, participant-specific
-fine-tuning, and output serialization. Reproducing manuscript values requires
-the study datasets acquired through the routes above and the study-specific
-analysis configuration. The synthetic example was not used to derive any
-reported result.
+contract, FVB forecasting, participant-specific fine-tuning, and output
+serialization. Reproducing manuscript values requires the original study data
+obtained through the routes above and the study-specific analysis configuration.
+The synthetic example was not used to derive any reported result.
 
 ## License
 

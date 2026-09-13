@@ -168,7 +168,8 @@ def train_NN(model, train_data, test_data, batch_size=50, num_epochs=100, lr=1e-
         train_dataset.clear_cache()
         
         
-        test_dataset.clear_cache()
+        if test_iter is not None:
+            test_dataset.clear_cache()
 
     if best_model_state is not None:
         model.load_state_dict(best_model_state)

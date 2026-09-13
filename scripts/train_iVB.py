@@ -64,6 +64,14 @@ def main():
     parser.add_argument('--output_dir', type=str, default=None)
     parser.add_argument('--label_path', type=str, default=DEFAULT_LABEL_PATH)
     parser.add_argument('--cache_dir', type=str, default=DEFAULT_CACHE_DIR)
+    parser.add_argument(
+        '--healthy_csv_path', type=str, default=None,
+        help='Healthy reference BOLD CSV used for counterfactual distortion analysis during fine-tuning'
+    )
+    parser.add_argument(
+        '--healthy_model_path', type=str, default=None,
+        help='Healthy-reference FVB checkpoint used for counterfactual anomaly analysis during fine-tuning'
+    )
 
     # Preprocessing and model structure parameters (must match training phase)
     parser.add_argument('--steps', type=int, default=DEFAULT_STEPS)
@@ -86,6 +94,11 @@ def main():
     parser.add_argument('--nhead', type=int, default=DEFAULT_NHEAD)     
         
     args = parser.parse_args()
+    if args.fine_tune and (not args.healthy_csv_path or not args.healthy_model_path):
+        parser.error(
+            '--fine_tune requires --healthy_csv_path and --healthy_model_path '
+            'for the two counterfactual CBM components.'
+        )
     if args.output_dir is None:
         patient_basename = os.path.splitext(os.path.basename(args.patient_csv))[0]
         args.output_dir = os.path.join(DEFAULT_OUTPUT_DIR, patient_basename)
@@ -172,7 +185,9 @@ def main():
             steps=args.steps,
             output_dir=ft_dir,
             fine_tune=True,
-            fine_tune_params=fine_tune_params
+            fine_tune_params=fine_tune_params,
+            healthy_csv_path=args.healthy_csv_path,
+            healthy_model_path=args.healthy_model_path
         )
 
         pt_dir = os.path.join(args.output_dir, 'patient_models')
@@ -197,5 +212,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

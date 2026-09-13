@@ -6,8 +6,19 @@ CSV_DIR="./AAL3_csv"
 #Finetunning Script
 SCRIPT="scripts/train_iVB.py"
 
+#Use the active Conda interpreter even when FSL is earlier in PATH
+if [ -n "${CONDA_PREFIX:-}" ] && [ -x "$CONDA_PREFIX/bin/python" ]; then
+    PYTHON_BIN="$CONDA_PREFIX/bin/python"
+else
+    PYTHON_BIN="python"
+fi
+
 #FVB model path
 MODEL_PATH='./AAL3_lr_5e-05_batch_256_epochs_300_l2_0.0001_patience_100_steps_7_dmodel_256/best_model.pth'
+
+#Healthy reference inputs used to calculate the two CBM components
+HEALTHY_CSV_PATH='./healthy_reference_AAL3.csv'
+HEALTHY_MODEL_PATH="$MODEL_PATH"
 
 #iVB output path
 OUTPUT_BASE="./AAL3_VTB"
@@ -23,9 +34,11 @@ for csv in "$CSV_DIR"/*.csv; do
         echo "Testing patient: $patient"
         
         # Build the command as a string for logging
-        cmd="python \"$SCRIPT\" \
+        cmd="\"$PYTHON_BIN\" \"$SCRIPT\" \
             --patient_csv \"$csv\" \
             --model_path \"$MODEL_PATH\" \
+            --healthy_csv_path \"$HEALTHY_CSV_PATH\" \
+            --healthy_model_path \"$HEALTHY_MODEL_PATH\" \
             --output_dir \"$OUTPUT_BASE/$patient\" \
             --num_layers 2 \
             --num_cross_layers 1 \

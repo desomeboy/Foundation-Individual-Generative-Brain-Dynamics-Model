@@ -44,7 +44,10 @@ def main():
                         choices=['HCP-MMP', 'AAL3'],
                         help='Brain atlas to use: HCP-MMP (360 regions) or aal3 (170 regions)')
     
-    parser.add_argument('--test_patient_ids', type=str, default='187547_AAL3_ts')
+    parser.add_argument(
+        '--test_patient_ids', type=str, default='',
+        help='Comma-separated patient IDs to analyze after training (default: none)'
+    )
     
     parser.add_argument('--use_specified_test_ids', action='store_true',
                         help='If set, use the specified test_patient_ids as test set instead of random split')    
@@ -66,6 +69,11 @@ def main():
     parser.add_argument('--dataset', type=str, default='all', 
                         choices=['HCP', 'PPMI', 'ABIDE', 'ADNI', 'all'],
                         help='Dataset to use: HCP, PPMI, ABIDE, ADNI, or all') 
+    parser.add_argument(
+        '--data_dir', action='append', default=None,
+        help='Input directory containing preprocessed CSV files; repeat for multiple directories. '
+             'When provided, this overrides --dataset and vtb/config.py dataset paths.'
+    )
     parser.add_argument('--label_path', type=str, default=DEFAULT_LABEL_PATH)
        
     #model params    
@@ -113,7 +121,9 @@ def main():
         raise ValueError(f"Unsupported atlas: {args.atlas}")
     
     
-    if args.dataset == 'all':
+    if args.data_dir:
+        data_dirs = args.data_dir
+    elif args.dataset == 'all':
         data_dirs = list(DATASET_PATHS.values())
     else:
         data_dirs = [DATASET_PATHS[args.dataset]]    

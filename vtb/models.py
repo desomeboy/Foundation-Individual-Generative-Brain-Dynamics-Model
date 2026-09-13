@@ -205,9 +205,3 @@ class VTB_Transformer(nn.Module):
 
         return y[0] if single else y
 
-
-# Current manuscript terminology. The legacy name remains available so that
-# existing training scripts and saved configurations continue to work.
-GBDMTransformer = VTB_Transformer
-
-

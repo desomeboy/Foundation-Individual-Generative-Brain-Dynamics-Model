@@ -1,4 +1,4 @@
-name: gbdm
+name: vtb
 channels:
   - defaults
 dependencies:

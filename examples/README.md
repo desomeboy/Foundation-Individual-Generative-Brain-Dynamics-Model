@@ -31,8 +31,8 @@ Expected files are:
 
 ```text
 demo_outputs/
-├── fbdm_predictions.npy
-├── ibdm_predictions.npy
+├── fvb_predictions.npy
+├── ivb_predictions.npy
 ├── metrics.json
 ├── synthetic_participant_bold.csv
 ├── synthetic_reference_bold.csv
