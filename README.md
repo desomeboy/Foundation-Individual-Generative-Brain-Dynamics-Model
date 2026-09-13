@@ -183,14 +183,6 @@ short optimization are solely a software smoke test; their metrics have no
 scientific or clinical interpretation. See [`examples/README.md`](examples/README.md)
 for the detailed input specification.
 
-## Reproducibility scope
-
-The synthetic demo verifies installation, the 166-region/seven-frame input
-contract, FVB forecasting, participant-specific fine-tuning, and output
-serialization. Reproducing manuscript values requires the original study data
-obtained through the routes above and the study-specific analysis configuration.
-The synthetic example was not used to derive any reported result.
-
 ## License
 
 The code is released under the Apache License 2.0. See [`LICENSE`](LICENSE).
