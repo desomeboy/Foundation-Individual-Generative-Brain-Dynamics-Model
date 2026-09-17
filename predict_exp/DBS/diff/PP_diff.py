@@ -30,7 +30,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-BASE_DIR = "./ruijin/DBS/AAL_VTB"  # The root directory of the VTB folder obtained after running train_iVB.py
+BASE_DIR = "./ruijin/DBS/AAL_iBDM"  # The root directory of the iBDM folder obtained after running train_iBDM.py
 UPDRS_CSV_PATH = "./ruijin/DBS/DBS_UPDRS.csv" # Clinical information corresponding to the data
 RANDOM_SEED = 42
 N_SPLITS = 5

@@ -6,15 +6,15 @@ import time
 import pickle
 import torch
 
-from vtb import (
+from bdm import (
     device, ensure_dir,
-    ANN_MLP, VTB_Transformer,
+    ANN_MLP, BDM_Transformer,
     load_model, analyze_single_patient
 )
-from vtb.config import *
+from bdm.config import *
 
-from vtb.data import load_patient_data
-from vtb.utils import set_seed
+from bdm.data import load_patient_data
+from bdm.utils import set_seed
 
 class TeeStream:
     def __init__(self, file_path):
@@ -36,7 +36,7 @@ def build_model(args, input_dim):
             output_dim=ROI_NUM
         )
     elif args.model_type == 'transformer':
-        model = VTB_Transformer(
+        model = BDM_Transformer(
             input_dim=input_dim,
             steps=args.steps,
             roi_num=ROI_NUM,
@@ -70,7 +70,7 @@ def main():
     )
     parser.add_argument(
         '--healthy_model_path', type=str, default=None,
-        help='Healthy-reference FVB checkpoint used for counterfactual anomaly analysis during fine-tuning'
+        help='Healthy-reference FBDM checkpoint used for counterfactual anomaly analysis during fine-tuning'
     )
 
     # Preprocessing and model structure parameters (must match training phase)
@@ -110,7 +110,7 @@ def main():
     sys.stderr = TeeStream(os.path.join(args.output_dir, 'error.log'))
 
     print("="*60)
-    print("vtb Single-Patient Test")
+    print("iBDM Single-Participant Analysis")
     print("="*60)
     print(f"Patient CSV : {args.patient_csv}")
     print(f"Model path  : {args.model_path}")
@@ -153,7 +153,7 @@ def main():
     ensure_dir(zero_dir)
     print(f"\n[Zero-shot] Analyzing patient {patient_id} ...")
     patient_data_input = (inputs, targets, labels)
-    from vtb.analysis import analyze_single_patient
+    from bdm.analysis import analyze_single_patient
 
     empirical_FC, model_FC_matrix, NPI_EC = analyze_single_patient(
         pretrained_model=model,
@@ -212,4 +212,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

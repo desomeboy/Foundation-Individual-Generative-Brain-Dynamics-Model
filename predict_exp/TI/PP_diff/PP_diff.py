@@ -44,8 +44,8 @@ def parse_args():
     parser.add_argument('--experiment_name', type=str, default='Treatment_Response_Diff_Clinical', help='Experiment name prefix for output files')
     
     # Path parameters
-    parser.add_argument('--base_dir_diff', type=str, default='./ruijin/TI_data/AAL3_VTB',
-                        help='The root directory of the VTB folder obtained after running train_iVB.py')
+    parser.add_argument('--base_dir_diff', type=str, default='./ruijin/TI_data/AAL3_iBDM',
+                        help='The root directory of the iBDM folder obtained after running train_iBDM.py')
     parser.add_argument('--excel_path', type=str, default='./ruijin/TI_gt.xlsx',
                         help='Clinical information corresponding to the data')
     

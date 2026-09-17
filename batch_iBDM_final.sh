@@ -4,7 +4,7 @@
 CSV_DIR="./AAL3_csv"
 
 #Finetunning Script
-SCRIPT="scripts/train_iVB.py"
+SCRIPT="scripts/train_iBDM.py"
 
 #Use the active Conda interpreter even when FSL is earlier in PATH
 if [ -n "${CONDA_PREFIX:-}" ] && [ -x "$CONDA_PREFIX/bin/python" ]; then
@@ -13,15 +13,15 @@ else
     PYTHON_BIN="python"
 fi
 
-#FVB model path
+#FBDM model path
 MODEL_PATH='./AAL3_lr_5e-05_batch_256_epochs_300_l2_0.0001_patience_100_steps_7_dmodel_256/best_model.pth'
 
 #Healthy reference inputs used to calculate the two CBM components
 HEALTHY_CSV_PATH='./healthy_reference_AAL3.csv'
 HEALTHY_MODEL_PATH="$MODEL_PATH"
 
-#iVB output path
-OUTPUT_BASE="./AAL3_VTB"
+#iBDM output path
+OUTPUT_BASE="./AAL3_iBDM"
 
 mkdir -p "$OUTPUT_BASE"
 

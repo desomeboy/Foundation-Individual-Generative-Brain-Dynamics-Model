@@ -1,4 +1,4 @@
-# vtb/data.py
+# bdm/data.py
 import os
 import time
 import pickle

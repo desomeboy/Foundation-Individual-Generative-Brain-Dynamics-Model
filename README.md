@@ -1,7 +1,8 @@
-# Predicting Neuromodulation Outcome for Parkinson's Disease with Generative Virtual Brain Model
+# Predicting Neuromodulation Outcome for Parkinson's Disease with a Generative Brain Dynamics Model
 
 This repository provides the code implementation and data-processing workflow
-for the Foundation Virtual Brain (FVB), individualized Virtual Brain (iVB), and
+for the Generative Brain Dynamics Model (GBDM), including the Foundation Brain
+Dynamics Model (FBDM), Individualized Brain Dynamics Model (iBDM), and
 Counterfactual Brain Mismatch (CBM) analyses described in the manuscript.
 
 ## Overview
@@ -16,11 +17,11 @@ forecasts to derive CBM features for neuromodulation-response prediction.
 
 ### Model architecture
 
-![Architecture of the generative virtual brain model](Figure/model_structure.png)
+![Architecture of the Generative Brain Dynamics Model](Figure/model_structure.png)
 
-### iVB workflow and counterfactual analysis
+### iBDM workflow and counterfactual analysis
 
-![iVB-based workflow and CBM calculation](Figure/CBM.png)
+![iBDM-based workflow and CBM calculation](Figure/CBM.png)
 
 ## Installation
 
@@ -28,7 +29,7 @@ The full study workflow uses Python 3.9:
 
 ```bash
 conda env create -f environment.yml
-conda activate vtb
+conda activate bdm
 ```
 
 ## Data and input specification
@@ -62,56 +63,56 @@ codes, and model labels used by the training loader.
 
 Run the applicable scripts under `Data_process/`, then place the resulting AAL3
 CSV files in local dataset directories. Dataset paths can be configured in
-`vtb/config.py` or supplied directly to the FVB command with repeatable
+`bdm/config.py` or supplied directly to the FBDM command with repeatable
 `--data_dir` arguments.
 
 Volume-based preprocessing requires
 [`dcm2niix`](https://github.com/rordenlab/dcm2niix) and
 [FSL](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki).
 
-### 2. Pre-train FVB
+### 2. Pre-train FBDM
 
-Using the dataset paths in `vtb/config.py`:
+Using the dataset paths in `bdm/config.py`:
 
 ```bash
-python scripts/train_FVB.py --train
+python scripts/train_FBDM.py --train
 ```
 
 Or supply one or more preprocessed-data directories without editing source
 code:
 
 ```bash
-python scripts/train_FVB.py --train \
+python scripts/train_FBDM.py --train \
   --data_dir /path/to/HCP_AAL3_CSV \
   --data_dir /path/to/PPMI_AAL3_CSV \
   --label_path /path/to/Data_label.csv
 ```
 
-This step produces the FVB checkpoint used in individualized analysis. The
+This step produces the FBDM checkpoint used in individualized analysis. The
 model-architecture arguments used here must also be supplied when loading the
 checkpoint in the next step.
 
-### 3. Build iVBs for clinical participants
+### 3. Build iBDMs for clinical participants
 
 Set `CSV_DIR`, `MODEL_PATH`, `HEALTHY_CSV_PATH`, `HEALTHY_MODEL_PATH`, and
-`OUTPUT_BASE` in `batch_iVB_final.sh`, then run:
+`OUTPUT_BASE` in `batch_iBDM_final.sh`, then run:
 
 ```bash
-bash batch_iVB_final.sh
+bash batch_iBDM_final.sh
 ```
 
-The batch script calls `scripts/train_iVB.py` for each clinical CSV. The healthy
-reference CSV and FVB checkpoint are used to calculate the two CBM components
+The batch script calls `scripts/train_iBDM.py` for each clinical CSV. The healthy
+reference CSV and FBDM checkpoint are used to calculate the two CBM components
 during participant-specific fine-tuning. A single participant can also be run
 directly:
 
 ```bash
-python scripts/train_iVB.py \
+python scripts/train_iBDM.py \
   --patient_csv /path/to/participant.csv \
-  --model_path /path/to/fvb_checkpoint.pth \
+  --model_path /path/to/fbdm_checkpoint.pth \
   --healthy_csv_path /path/to/healthy_reference.csv \
-  --healthy_model_path /path/to/healthy_fvb_checkpoint.pth \
-  --output_dir /path/to/ivb_output \
+  --healthy_model_path /path/to/healthy_fbdm_checkpoint.pth \
+  --output_dir /path/to/ibdm_output \
   --fine_tune
 ```
 
@@ -132,21 +133,21 @@ corresponding controlled clinical tables. Update their input paths before use.
 The following example runs without clinical data:
 
 ```bash
-git clone https://github.com/desomeboy/Foundation-Individual-Generative-Virtual-Brain.git
-cd Foundation-Individual-Generative-Virtual-Brain
+git clone https://github.com/desomeboy/Generative-Brain-Dynamics-Model.git
+cd Generative-Brain-Dynamics-Model
 conda env create -f environment-demo.yml
-conda activate vtb-demo
+conda activate bdm-demo
 "$CONDA_PREFIX/bin/python" scripts/run_demo.py --output-dir demo_outputs
 ```
 
 The command creates artificial 166-region BOLD signals, applies per-region
 temporal z-scoring, constructs seven-frame forecasting windows, runs a short
-FVB optimization and participant-specific iVB fine-tuning, and saves:
+FBDM optimization and participant-specific iBDM fine-tuning, and saves:
 
 ```text
 demo_outputs/
-├── fvb_predictions.npy
-├── ivb_predictions.npy
+├── fbdm_predictions.npy
+├── ibdm_predictions.npy
 ├── metrics.json
 ├── synthetic_participant_bold.csv
 ├── synthetic_reference_bold.csv

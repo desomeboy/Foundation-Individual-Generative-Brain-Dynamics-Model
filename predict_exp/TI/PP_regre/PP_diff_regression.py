@@ -84,7 +84,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-BASE_DIR_DIFF = "./ruijin/TI_data/AAL3_VTB"  # The root directory of the VTB folder obtained after running train_iVB.py
+BASE_DIR_DIFF = "./ruijin/TI_data/AAL3_iBDM"  # The root directory of the iBDM folder obtained after running train_iBDM.py
 EXCEL_PATH = "./ruijin/TI_gt.xlsx" # Clinical information corresponding to the data
 RANDOM_SEED = 42
 N_SPLITS = 5

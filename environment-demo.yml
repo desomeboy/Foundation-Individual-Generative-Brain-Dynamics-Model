@@ -1,4 +1,4 @@
-name: vtb-demo
+name: bdm-demo
 channels:
   - defaults
 dependencies:

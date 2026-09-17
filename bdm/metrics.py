@@ -1,4 +1,4 @@
-# vtb/metrics.py
+# bdm/metrics.py
 import numpy as np
 import torch
 from .utils import device

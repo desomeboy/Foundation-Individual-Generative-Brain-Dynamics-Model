@@ -1,4 +1,4 @@
-# vtb/config.py
+# bdm/config.py
 
 
 ROI_NUM = 166

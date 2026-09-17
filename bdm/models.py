@@ -1,4 +1,4 @@
-# vtb/models.py
+# bdm/models.py
 import torch
 import torch.nn as nn
 import math
@@ -63,7 +63,7 @@ class PositionalEncoding(nn.Module):
 
  
     
-class VTB_Transformer(nn.Module):
+class BDM_Transformer(nn.Module):
     def __init__(
         self,
         input_dim,     # = steps * roi_num

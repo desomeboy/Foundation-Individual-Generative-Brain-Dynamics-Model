@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
-"""Self-contained smoke test for the FVB-to-iVB forecasting workflow.
-
-The generated signals are synthetic and the deliberately short optimization is
-only intended to verify the public software interface. Demo metrics have no
-scientific or clinical interpretation.
-"""
+"""Self-contained smoke test for the FBDM-to-iBDM forecasting workflow."""
 
 import argparse
 import copy
@@ -24,8 +19,8 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 if str(REPOSITORY_ROOT) not in sys.path:
     sys.path.insert(0, str(REPOSITORY_ROOT))
 
-from vtb.data import multi2one  # noqa: E402
-from vtb.models import VTB_Transformer  # noqa: E402
+from bdm.data import multi2one  # noqa: E402
+from bdm.models import BDM_Transformer  # noqa: E402
 
 
 ROI_COUNT = 166
@@ -190,7 +185,7 @@ def summarize(targets: np.ndarray, predictions: np.ndarray) -> Dict[str, float]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run a data-independent FVB/iVB software smoke test."
+        description="Run a data-independent FBDM/iBDM software smoke test."
     )
     parser.add_argument("--output-dir", type=Path, default=Path("demo_outputs"))
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
@@ -244,7 +239,7 @@ def main() -> None:
 
     if args.d_model % 4 != 0:
         raise ValueError("--d-model must be divisible by four.")
-    fvb = VTB_Transformer(
+    fbdm = BDM_Transformer(
         input_dim=HISTORY_FRAMES * ROI_COUNT,
         steps=HISTORY_FRAMES,
         roi_num=ROI_COUNT,
@@ -260,8 +255,8 @@ def main() -> None:
         demographic_dim=DEMOGRAPHIC_DIM,
     ).to(device)
 
-    fvb, fvb_losses = optimize(
-        fvb,
+    fbdm, fbdm_losses = optimize(
+        fbdm,
         reference_inputs,
         reference_targets,
         reference_labels,
@@ -276,13 +271,13 @@ def main() -> None:
     test_targets = participant_targets[split:]
     test_labels = participant_labels[split:]
     test_context = participant_context[split:]
-    fvb_predictions = predict(
-        fvb, test_inputs, test_labels, test_context, device
+    fbdm_predictions = predict(
+        fbdm, test_inputs, test_labels, test_context, device
     )
 
-    ivb = copy.deepcopy(fvb)
-    ivb, ivb_losses = optimize(
-        ivb,
+    ibdm = copy.deepcopy(fbdm)
+    ibdm, ibdm_losses = optimize(
+        ibdm,
         participant_inputs[:split],
         participant_targets[:split],
         participant_labels[:split],
@@ -292,16 +287,15 @@ def main() -> None:
         learning_rate=1e-4,
         batch_size=args.batch_size,
     )
-    ivb_predictions = predict(
-        ivb, test_inputs, test_labels, test_context, device
+    ibdm_predictions = predict(
+        ibdm, test_inputs, test_labels, test_context, device
     )
 
     np.save(args.output_dir / "targets.npy", test_targets)
-    np.save(args.output_dir / "fvb_predictions.npy", fvb_predictions)
-    np.save(args.output_dir / "ivb_predictions.npy", ivb_predictions)
+    np.save(args.output_dir / "fbdm_predictions.npy", fbdm_predictions)
+    np.save(args.output_dir / "ibdm_predictions.npy", ibdm_predictions)
 
     report = {
-        "purpose": "Software smoke test only; no scientific interpretation.",
         "configuration": {
             "seed": args.seed,
             "device": str(device),
@@ -310,28 +304,28 @@ def main() -> None:
             "roi_count": ROI_COUNT,
             "discarded_initial_frames": SKIP_FIRST,
             "d_model": args.d_model,
-            "fvb_epochs": args.epochs,
-            "ivb_fine_tune_epochs": args.fine_tune_epochs,
+            "fbdm_epochs": args.epochs,
+            "ibdm_fine_tune_epochs": args.fine_tune_epochs,
         },
         "output_shape": list(test_targets.shape),
         "all_outputs_finite": bool(
             np.isfinite(test_targets).all()
-            and np.isfinite(fvb_predictions).all()
-            and np.isfinite(ivb_predictions).all()
+            and np.isfinite(fbdm_predictions).all()
+            and np.isfinite(ibdm_predictions).all()
         ),
         "training_loss": {
-            "fvb": fvb_losses,
-            "ivb": ivb_losses,
+            "fbdm": fbdm_losses,
+            "ibdm": ibdm_losses,
         },
         "metrics": {
-            "fvb": summarize(test_targets, fvb_predictions),
-            "ivb": summarize(test_targets, ivb_predictions),
+            "fbdm": summarize(test_targets, fbdm_predictions),
+            "ibdm": summarize(test_targets, ibdm_predictions),
         },
     }
     metrics_path = args.output_dir / "metrics.json"
     metrics_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
-    print("FVB/iVB synthetic smoke test completed successfully.")
+    print("FBDM/iBDM synthetic smoke test completed successfully.")
     print("Output shape: {}".format(tuple(test_targets.shape)))
     print("All outputs finite: {}".format(report["all_outputs_finite"]))
     print("Metrics: {}".format(metrics_path))

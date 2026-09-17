@@ -8,8 +8,7 @@ from .metrics import corrcoef, model_FC as _model_FC, model_EC as _model_EC, fla
 from .utils import ensure_dir,device
 import torch
 from sklearn.metrics import mean_absolute_error, r2_score
-from vtb.vis_tool import *
-import csv
+from bdm.vis_tool import *
 from .train import fine_tune_for_patient
 from .data import load_patient_data
 
@@ -97,7 +96,7 @@ def analyze_single_patient(pretrained_model, patient_data, patient_id, steps, ou
                            neworder=None, fig_size=(12, 10), fine_tune=True, fine_tune_params=None, 
                            max_analysis_steps=1200,
                            healthy_csv_path="", # Brain dynamics in healthy individuals
-                           healthy_model_path="" # Healthy virtual brain model
+                           healthy_model_path="" # Healthy FBDM
                            ):
  
     
@@ -117,8 +116,8 @@ def analyze_single_patient(pretrained_model, patient_data, patient_id, steps, ou
 
     
     if fine_tune:
-        # ====== Target 1: Calculate patient anomaly using healthy VTB model ======
-        print("\n===== TARGET 1: Calculating patient anomaly using healthy VTB model =====")
+        # ====== Target 1: Calculate patient anomaly using healthy BDM model ======
+        print("\n===== TARGET 1: Calculating patient anomaly using healthy BDM model =====")
         # 1. Load healthy pre-trained model (kept fixed)
         healthy_model = pretrained_model.__class__(**pretrained_model.init_args)
         healthy_model.load_state_dict(torch.load(healthy_model_path, map_location=device)['model_state_dict'])
@@ -247,9 +246,9 @@ def analyze_single_patient(pretrained_model, patient_data, patient_id, steps, ou
     np.save(os.path.join(output_dir, f"patient_{patient_id}_model_FC.npy"), model_FC_matrix)
     np.save(os.path.join(output_dir, f"patient_{patient_id}_NPI_EC.npy"), NPI_EC)
     
-    # ====== TARGET 2: Calculate healthy data distortion using patient VTB model ======
+    # ====== TARGET 2: Calculate healthy data distortion using patient BDM model ======
     if fine_tune:  
-        print("\n===== TARGET 2: Calculating healthy distortion using patient VTB model =====")
+        print("\n===== TARGET 2: Calculating healthy distortion using patient BDM model =====")
         
         # 1. Load healthy subject data (using same preprocessing as during training)
         healthy_inputs, healthy_targets, healthy_labels, _ = load_patient_data(
@@ -309,24 +308,3 @@ def analyze_single_patient(pretrained_model, patient_data, patient_id, steps, ou
         
     print(f"Analysis for patient {patient_id} completed. Results saved to {output_dir}")
     return (empirical_FC, model_FC_matrix, NPI_EC, model) if fine_tune else (empirical_FC, model_FC_matrix, NPI_EC)
-
-    summary_csv_path = "/ailab/group/medai-share/syDu/ruijin/Final_data/all_patients_summary.csv"
-    file_exists = os.path.isfile(summary_csv_path)
-
-
-    with open(summary_csv_path, mode='a', newline='') as csvfile:
-        fieldnames = ['patient_id', 'FC_r', 'FC_p', 'MAE', 'R2']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        
-        if not file_exists:
-            writer.writeheader()
-        
-        writer.writerow({
-            'patient_id': patient_id,
-            'FC_r': f"{r_value:.6f}",
-            'FC_p': f"{p_value:.4e}",
-            'MAE': f"{mae:.6f}",
-            'R2': f"{r2:.6f}"
-        })
-    
-    print(f"Core metrics for patient {patient_id} appended to {summary_csv_path}")

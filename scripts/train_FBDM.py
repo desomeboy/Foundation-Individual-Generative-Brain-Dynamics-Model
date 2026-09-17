@@ -9,14 +9,14 @@ import time
 import torch
 
 
-from vtb import (
+from bdm import (
     device, ensure_dir,
-    ANN_MLP, VTB_Transformer,
+    ANN_MLP, BDM_Transformer,
     prepare_dataset,
     train_NN, load_model, plot_training_curves,
     analyze_single_patient
 )
-from vtb.config import *
+from bdm.config import *
 
 import hashlib
 
@@ -72,7 +72,7 @@ def main():
     parser.add_argument(
         '--data_dir', action='append', default=None,
         help='Input directory containing preprocessed CSV files; repeat for multiple directories. '
-             'When provided, this overrides --dataset and vtb/config.py dataset paths.'
+             'When provided, this overrides --dataset and bdm/config.py dataset paths.'
     )
     parser.add_argument('--label_path', type=str, default=DEFAULT_LABEL_PATH)
        
@@ -230,7 +230,7 @@ def main():
         )
     elif args.model_type == 'transformer':
         
-        model = VTB_Transformer(
+        model = BDM_Transformer(
         input_dim=input_dim,
         steps=args.steps,
         roi_num=ROI_NUM,
@@ -368,7 +368,7 @@ def main():
     else:
         print("\nStep 4: No test patients to analyze")
 
-    print("\nvtb analysis completed successfully!")
+    print("\nBDM analysis completed successfully!")
     print(f"Results saved to: {args.output_dir}")
     
     try:
@@ -381,42 +381,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# CUDA_VISIBLE_DEVICES=0 python scripts/train_FVB \
-#   --train \
-#   --batch_size 256\
-#   --num_epochs 300\
-#   --lr 5e-5 \
-#   --l2 1e-4 \
-#   --patience 100 \
-#   --steps 7 \
-#   --skip_first 30 --output_dir /ailab/user/dusiyuan/code/Brain/EC/AAL3/EC_results_num_layer_2  --d_model 256 --num_layers 2 --num_cross_layers 1 --use_specified_test_ids
-
-
-
-#fintune iVB
-# CUDA_VISIBLE_DEVICES=0 python scripts/train_FVB \
-#   --batch_size 256\
-#   --num_epochs 300\
-#   --lr 5e-5 \
-#   --l2 1e-4 \
-#   --patience 100 \
-#   --steps 7 \
-#   --cache_dir /ailab/user/dusiyuan/code/Brain/EC/data_cache \
-#   --model_path /ailab/user/dusiyuan/code/Brain/EC/HCP/EC_results_num_layer_2/best_model.pth \
-#   --label_path /ailab/group/medai-share/syDu/Brain_EC/source_label.csv \
-#   --skip_first 30 --output_dir /ailab/user/dusiyuan/code/Brain/EC/HCP/EC_results_num_layer_2  --d_model 256 --num_layers 2 --num_cross_layers 1 --use_specified_test_ids
-
-
-
-
-
-# CUDA_VISIBLE_DEVICES=0 python scripts/train_FVB \
-#   --batch_size 512\
-#   --num_epochs 100\
-#   --lr 1e-3 \
-#   --l2 5e-5 \
-#   --patience 100 \
-#   --steps 7 --model_type MLP \
-#   --skip_first 30 --output_dir /ailab/user/dusiyuan/code/Brain/EC/AAL3/ANN_baseline --use_specified_test_ids

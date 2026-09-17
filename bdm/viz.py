@@ -1,4 +1,4 @@
-# vtb/viz.py
+# bdm/viz.py
 import matplotlib.pyplot as plt
 
 def plot_training_curves(train_losses, test_losses, output_path="./results/training_curves.png"):
