@@ -133,8 +133,8 @@ corresponding controlled clinical tables. Update their input paths before use.
 The following example runs without clinical data:
 
 ```bash
-git clone https://github.com/desomeboy/Generative-Brain-Dynamics-Model.git
-cd Generative-Brain-Dynamics-Model
+git clone https://github.com/desomeboy/Foundation-Individual-Generative-Brain-Dynamics-Model.git
+cd Foundation-Individual-Generative-Brain-Dynamics-Model
 conda env create -f environment-demo.yml
 conda activate bdm-demo
 "$CONDA_PREFIX/bin/python" scripts/run_demo.py --output-dir demo_outputs
